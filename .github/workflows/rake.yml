@@ -1,0 +1,39 @@
+# The reference Rack implementation is held to the same executable contract
+# as the Workers stack: `rspec` covers the app's own behavior, and the
+# contract job replays relaton-api-js's fixture set against production — the
+# same run.mjs that repo's CI executes, so both implementations answer the
+# one fixture set (TODO.api/12). The smoke is read-only GETs.
+name: rake
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rspec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+      - run: bundle exec rspec spec
+
+  contract:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run the shared contract fixtures against production
+        run: |
+          mkdir contract
+          curl -fsSL -o contract/run.mjs \
+            https://raw.githubusercontent.com/relaton/relaton-api-js/main/packages/relaton-api/contract/run.mjs
+          curl -fsSL -o contract/fixtures.json \
+            https://raw.githubusercontent.com/relaton/relaton-api-js/main/packages/relaton-api/contract/fixtures.json
+          RELATON_API_BASE_URL=https://api.relaton.org node contract/run.mjs
