@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.license = "BSD-2-Clause"
   spec.required_ruby_version = ">= 3.0"
   spec.files = Dir["lib/**/*.rb", "README.md"]
-  spec.add_dependency "rack", ">= 2.2"
-  spec.add_dependency "relaton", "~> 2.1"
+  spec.add_dependency "rack", "~> 3.2"
+  spec.add_dependency "relaton", "~> 3.0"
   spec.add_development_dependency "rspec"
 end
