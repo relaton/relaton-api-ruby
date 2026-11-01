@@ -30,14 +30,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run the shared contract fixtures against production
-        # Pinned to relaton/relaton-api-js@c406e485447da03999d02f48685f1cea632ca594
-        # — contract fixtures v1.0.0. Upgrading the pin is a deliberate PR,
+        # Pinned to relaton/relaton-api-js@f48e055ab3f02edfcee8a000894bec4030adf550
+        # — contract fixtures v1.1.0 (adds the v3 surface). Upgrading the pin is a deliberate PR,
         # driven by a fixture change in relaton-api-js (that repo's
         # contract/README.md records the protocol).
         run: |
           mkdir contract
           curl -fsSL -o contract/run.mjs \
-            https://raw.githubusercontent.com/relaton/relaton-api-js/c406e485447da03999d02f48685f1cea632ca594/packages/relaton-api/contract/run.mjs
+            https://raw.githubusercontent.com/relaton/relaton-api-js/f48e055ab3f02edfcee8a000894bec4030adf550/packages/relaton-api/contract/run.mjs
           curl -fsSL -o contract/fixtures.json \
-            https://raw.githubusercontent.com/relaton/relaton-api-js/c406e485447da03999d02f48685f1cea632ca594/packages/relaton-api/contract/fixtures.json
+            https://raw.githubusercontent.com/relaton/relaton-api-js/f48e055ab3f02edfcee8a000894bec4030adf550/packages/relaton-api/contract/fixtures.json
           RELATON_API_BASE_URL=https://api.relaton.org node contract/run.mjs
