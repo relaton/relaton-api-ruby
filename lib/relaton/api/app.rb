@@ -7,7 +7,10 @@ module Relaton
     # Rack application. Routes are a registry — adding one is a new
     # autoloaded class plus one entry here (open/closed).
     class App
-      ROUTES = [Routes::Version, Routes::Flavors, Routes::Documents].freeze
+      ROUTES = [
+        Routes::ApiV1::Document, Routes::ApiV1::Search, Routes::ApiV1::Version,
+        Routes::Version, Routes::Flavors, Routes::Documents,
+      ].freeze
 
       attr_reader :config, :store
 
