@@ -1,0 +1,54 @@
+{
+  "name": "relaton-api contract fixtures (local Rack dataset)",
+  "description": "The same assertion classes as the shared production fixtures, pinned to the CI fixture dataset (two rfcs docs). Run against the booted Rack app; the production set stays authoritative for the Workers stack.",
+  "baseUrlEnv": "RELATON_API_BASE_URL",
+  "fixtures": [
+    {
+      "name": "document: RFC 3986 resolves as bibdata XML",
+      "path": "/api/v1/document?code=RFC%203986",
+      "headers": { "accept": "text/xml" },
+      "expect": {
+        "status": 200,
+        "contentType": "text/xml",
+        "bodyContains": ["<bibdata", "Uniform Resource Identifier"]
+      }
+    },
+    {
+      "name": "document: an unknown code is a 404",
+      "path": "/api/v1/document?code=NOSUCH99",
+      "headers": { "accept": "text/plain" },
+      "expect": { "status": 404, "contentType": "text/plain" }
+    },
+    {
+      "name": "document: a missing code is a 400 problem+json",
+      "path": "/api/v1/document",
+      "expect": { "status": 400, "contentType": "application/problem+json" }
+    },
+    {
+      "name": "search: query with flavor filter and facets",
+      "path": "/api/v1/search?q=transport&flavor=rfcs",
+      "headers": { "accept": "application/json" },
+      "expect": {
+        "status": 200,
+        "contentType": "application/json",
+        "json": { "total": "1" }
+      }
+    },
+    {
+      "name": "v3: a document by key with format=xml",
+      "path": "/v3/documents/RFC%208446?format=xml",
+      "headers": { "accept": "text/xml" },
+      "expect": { "status": 200, "contentType": "text/xml", "bodyContains": ["<bibdata"] }
+    },
+    {
+      "name": "v3: flavors lists stream coverage",
+      "path": "/v3/flavors",
+      "headers": { "accept": "application/json" },
+      "expect": {
+        "status": 200,
+        "contentType": "application/json",
+        "bodyContains": ["rfcs"]
+      }
+    }
+  ]
+}
