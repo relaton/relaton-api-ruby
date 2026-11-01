@@ -79,6 +79,30 @@ module Relaton
             "items" => items, "facets" => facets }
         end
 
+        # v3 collection page: the same filters as #search, docid-ordered,
+        # paged by cursor (the docid the previous page ended on) instead of
+        # page numbers. -> { items:, next_cursor: }
+        def search_cursor(cursor: nil, limit: DEFAULT_SIZE, q: nil, flavor: nil,
+                          doctype: nil, year: nil, status: nil)
+          limit = DEFAULT_SIZE if limit.nil? || limit < 1
+          limit = MAX_SIZE if limit > MAX_SIZE
+
+          filtered = @docs.select do |d|
+            (flavor.nil? || d.stream == flavor) &&
+              (doctype.nil? || d.doctype == doctype) &&
+              (year.nil? || d.year == year.to_i) &&
+              (status.nil? || d.status == status) &&
+              (q.nil? || matches_query?(d, q))
+          end.sort_by { |d| d.docid.to_s }
+          filtered = filtered.drop_while { |d| d.docid.to_s <= cursor.to_s } if cursor
+
+          page = filtered.first(limit + 1)
+          has_more = page.size > limit
+          served = page.first(limit)
+          { items: served.map { |d| collection_item(d) },
+            next_cursor: has_more ? served.last.docid.to_s : nil }
+        end
+
         # [{ stream:, count: }] per top-level stream directory
         def streams
           @docs.group_by(&:stream)
@@ -123,6 +147,20 @@ module Relaton
             "status" => doc.status,
             "title" => doc.title,
             "api" => "/api/v1/document?code=#{::URI.encode_www_form_component(doc.docid.to_s)}",
+          }
+        end
+
+        def collection_item(doc)
+          {
+            "key" => doc.docid,
+            "flavor" => doc.stream,
+            "docid" => doc.docid,
+            "title" => doc.title,
+            "year" => doc.year,
+            "doctype" => doc.doctype,
+            "status" => doc.status,
+            # encodeURIComponent's form (spaces as %20, not +).
+            "api" => "/v3/documents/#{::URI.encode_www_form_component(doc.docid.to_s).gsub('+', '%20')}",
           }
         end
 
