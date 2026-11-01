@@ -14,12 +14,28 @@ module Relaton
           KEY_PATTERN.match?(path)
         end
 
+        QUERY_KEYS = %w[format year all_parts keep_year].freeze
+
         def call(env, app)
           key = URI.decode_www_form_component(KEY_PATTERN.match(env["PATH_INFO"])[:key])
-          document = app.store.fetch(key)
-          return not_found(key) unless document
+          params = ::URI.decode_www_form(env["QUERY_STRING"].to_s).to_h
+          entry = app.store.resolve(
+            key, year: params["year"]&.to_i,
+                 all_parts: params["all_parts"] == "true",
+          )
+          return not_found(key) unless entry
 
-          [200, { "content-type" => "application/json" }, [JSON.generate(document)]]
+          case params["format"]
+          when "xml"
+            [200, { "content-type" => "text/xml" },
+             [app.store.document_xml(entry)]]
+          when "yaml"
+            [200, { "content-type" => "text/yaml" },
+             [app.store.document_yaml(entry)]]
+          else
+            [200, { "content-type" => "application/json" },
+             [JSON.generate(app.store.document_hash(entry))]]
+          end
         end
 
         private
