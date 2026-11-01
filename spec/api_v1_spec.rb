@@ -86,14 +86,14 @@ RSpec.describe "the /api/v1 contract surface" do
   it "serves a v3 document as XML on format=xml" do
     res = Rack::MockRequest.new(app).get("/v3/documents/RFC%203986?format=xml")
     expect(res.status).to eq(200)
-    expect(res["content-type"]).to eq("text/xml")
+    expect(res["content-type"]).to eq("application/relaton+xml")
     expect(res.body).to include("<bibdata")
   end
 
   it "serves a v3 document as raw YAML on format=yaml" do
     res = Rack::MockRequest.new(app).get("/v3/documents/RFC%203986?format=yaml")
     expect(res.status).to eq(200)
-    expect(res["content-type"]).to eq("text/yaml")
+    expect(res["content-type"]).to eq("application/yaml")
     expect(res.body).to include("Uniform Resource Identifier")
   end
 end
