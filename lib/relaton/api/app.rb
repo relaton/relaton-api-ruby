@@ -8,7 +8,6 @@ module Relaton
     # autoloaded class plus one entry here (open/closed).
     class App
       ROUTES = [
-        Routes::ApiV1::Document, Routes::ApiV1::Search, Routes::ApiV1::Version,
         Routes::Version, Routes::Flavors, Routes::Documents,
       ].freeze
 

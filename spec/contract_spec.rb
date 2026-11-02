@@ -50,7 +50,8 @@ RSpec.describe "local contract fixtures" do
 
   FIXTURES.each do |fixture|
     it fixture["name"] do
-      res = Rack::MockRequest.new(app).get(fixture["path"], "HTTP_ACCEPT" => nil)
+      headers = (fixture["headers"] || {}).transform_keys { |k| "HTTP_#{k.tr("-", "_").upcase}" }
+      res = Rack::MockRequest.new(app).get(fixture["path"], headers)
       want = fixture["expect"]
       expect(res.status).to eq(want["status"]) if want["status"]
       expect(res["content-type"].split(";").first).to eq(want["contentType"]) if want["contentType"]

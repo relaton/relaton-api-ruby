@@ -1,47 +1,56 @@
 {
   "name": "relaton-api contract fixtures (local Rack dataset)",
-  "description": "The same assertion classes as the shared production fixtures, pinned to the CI fixture dataset (two rfcs docs). Run against the booted Rack app; the production set stays authoritative for the Workers stack.",
+  "version": "2.0.0",
+  "description": "The same assertion classes as the shared v2.0.0 (v3-only) production fixtures, pinned to the CI fixture dataset (two rfcs docs). Run against the booted Rack app; the production set stays authoritative for the Workers stack.",
   "baseUrlEnv": "RELATON_API_BASE_URL",
   "fixtures": [
     {
-      "name": "document: RFC 3986 resolves as bibdata XML",
-      "path": "/api/v1/document?code=RFC%203986",
-      "headers": { "accept": "text/xml" },
+      "name": "document: RFC 3986 serves the model JSON by key",
+      "path": "/v3/documents/RFC%203986",
       "expect": {
         "status": 200,
-        "contentType": "text/xml",
-        "bodyContains": ["<bibdata", "Uniform Resource Identifier"]
+        "contentType": "application/json",
+        "bodyContains": ["Uniform Resource Identifier"]
       }
     },
     {
-      "name": "document: an unknown code is a 404",
-      "path": "/api/v1/document?code=NOSUCH99",
-      "headers": { "accept": "text/plain" },
-      "expect": { "status": 404, "contentType": "text/plain" }
+      "name": "document: an unknown key is problem+json",
+      "path": "/v3/documents/RFC%20NOTHING",
+      "expect": { "status": 404, "contentType": "application/problem+json" }
     },
     {
-      "name": "document: a missing code is a 400 problem+json",
-      "path": "/api/v1/document",
-      "expect": { "status": 400, "contentType": "application/problem+json" }
+      "name": "document: a key spelling resolves through the normalized token",
+      "path": "/v3/documents/RFC3986",
+      "expect": { "status": 200, "contentType": "application/json" }
     },
     {
-      "name": "search: query with flavor filter and facets",
-      "path": "/api/v1/search?q=transport&flavor=rfcs",
+      "name": "negotiation: bibdata XML via format",
+      "path": "/v3/documents/RFC%203986?format=xml",
+      "headers": { "accept": "application/relaton+xml" },
+      "expect": {
+        "status": 200,
+        "contentType": "application/relaton+xml",
+        "bodyContains": ["<bibdata"]
+      }
+    },
+    {
+      "name": "negotiation: yaml via Accept",
+      "path": "/v3/documents/RFC%203986",
+      "headers": { "accept": "application/yaml" },
+      "expect": { "status": 200, "contentType": "application/yaml" }
+    },
+    {
+      "name": "collection: pages docid-ordered with a cursor",
+      "path": "/v3/documents?limit=1",
       "headers": { "accept": "application/json" },
       "expect": {
         "status": 200,
         "contentType": "application/json",
-        "json": { "total": "1" }
+        "bodyContains": ["\"next_cursor\""]
       }
     },
     {
-      "name": "v3: a document by key with format=xml",
-      "path": "/v3/documents/RFC%208446?format=xml",
-      "headers": { "accept": "application/relaton+xml" },
-      "expect": { "status": 200, "contentType": "application/relaton+xml", "bodyContains": ["<bibdata"] }
-    },
-    {
-      "name": "v3: flavors lists stream coverage",
+      "name": "flavors: reports stream coverage",
       "path": "/v3/flavors",
       "headers": { "accept": "application/json" },
       "expect": {
@@ -49,6 +58,12 @@
         "contentType": "application/json",
         "bodyContains": ["rfcs"]
       }
+    },
+    {
+      "name": "version: the release banner answers",
+      "path": "/v3/version",
+      "headers": { "accept": "application/json" },
+      "expect": { "status": 200, "contentType": "application/json" }
     }
   ]
 }
