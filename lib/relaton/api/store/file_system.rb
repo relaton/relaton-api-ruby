@@ -49,37 +49,8 @@ module Relaton
           matches.find { |d| d.year == year.to_i } || best
         end
 
-        # Full-contract search: substring over titles and identifiers,
-        # exact-value filters, one page of items in the Workers response
-        # shape, and facets computed over the whole filtered set.
-        def search(q: nil, flavor: nil, doctype: nil, year: nil,
-                   status: nil, page: 0, size: DEFAULT_SIZE)
-          size = DEFAULT_SIZE if size.nil? || size < 1
-          size = MAX_SIZE if size > MAX_SIZE
-          page = 0 if page.nil? || page.negative?
-
-          filtered = @docs.select do |d|
-            (flavor.nil? || d.stream == flavor) &&
-              (doctype.nil? || d.doctype == doctype) &&
-              (year.nil? || d.year == year.to_i) &&
-              (status.nil? || d.status == status) &&
-              (q.nil? || matches_query?(d, q))
-          end
-
-          facets = {
-            "flavor" => facet(filtered, :stream),
-            "doctype" => facet(filtered, :doctype),
-            "status" => facet(filtered, :status),
-          }
-          items = filtered.sort_by { |d| [d.title.to_s, d.docid.to_s] }
-                          .drop(page * size)
-                          .first(size)
-                          .map { |d| item(d) }
-          { "total" => filtered.size, "page" => page, "size" => size,
-            "items" => items, "facets" => facets }
-        end
-
-        # v3 collection page: the same filters as #search, docid-ordered,
+        # v3 collection page: substring over titles and identifiers,
+        # exact-value filters, docid-ordered,
         # paged by cursor (the docid the previous page ended on) instead of
         # page numbers. -> { items:, next_cursor: }
         def search_cursor(cursor: nil, limit: DEFAULT_SIZE, q: nil, flavor: nil,
@@ -129,25 +100,6 @@ module Relaton
           needle = q.downcase
           doc.title.to_s.downcase.include?(needle) ||
             doc.ids.any? { |i| i.downcase.include?(needle) }
-        end
-
-        def facet(docs, attr)
-          docs.group_by { |d| d.send(attr) }
-              .reject { |value, _| value.nil? }
-              .map { |value, ds| { "value" => value, "count" => ds.size } }
-              .sort_by { |f| -f["count"] }
-        end
-
-        def item(doc)
-          {
-            "docid" => doc.docid,
-            "flavor" => doc.stream,
-            "year" => doc.year,
-            "doctype" => doc.doctype,
-            "status" => doc.status,
-            "title" => doc.title,
-            "api" => "/api/v1/document?code=#{::URI.encode_www_form_component(doc.docid.to_s)}",
-          }
         end
 
         def collection_item(doc)
