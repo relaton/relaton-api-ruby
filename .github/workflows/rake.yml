@@ -37,6 +37,8 @@ jobs:
         run: |
           mkdir contract
           npm pack @relaton/api@3.0.0 --silent --pack-destination contract
-          tar -xzf contract/relaton-api-3.0.0.tgz --strip-components=2 \
-            package/contract/run.mjs package/contract/fixtures.json -C contract
+          # -C must precede the member names: operands extracted before
+          # the directory change land in the repo root (seen in CI).
+          tar -xzf contract/relaton-api-3.0.0.tgz -C contract --strip-components=2 \
+            package/contract/run.mjs package/contract/fixtures.json
           RELATON_API_BASE_URL=https://api.relaton.org node contract/run.mjs
